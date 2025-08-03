@@ -127,8 +127,8 @@ Check flag.Here is your token : fa6v5ateaw21peobuub8ipe6s
 
 ## Security Lessons
 
-- Command Injection: Never concatenate user input into shell commands
-- Input Sanitization: Use allow-lists or proper escaping
+- **Command Injection**: Never concatenate user input into shell commands
+- **Input Sanitization**: Use allow-lists or proper escaping
 
 ## Next Steps
 
