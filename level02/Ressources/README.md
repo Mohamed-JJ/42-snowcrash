@@ -1,6 +1,7 @@
 # SnowCrash Level02 Walkthrough
 
 ## Overview
+
 Level02 involves analyzing a packet capture file to extract authentication credentials hidden in network traffic.
 
 ## Initial Investigation
@@ -94,6 +95,7 @@ After accounting for the control characters and their effects on the input, the 
 **`ft_waNDReL0L`**
 
 The reconstruction process:
+
 - `ft_w` - initial characters
 - `a` - character typed
 - `DEL` - backspace (removes the 'a')
@@ -134,6 +136,7 @@ Check flag.Here is your token : kooda2puivaav1idi4f57q8iq
 4. **Tools**: Wireshark's TCP stream following feature is invaluable for reconstructing network conversations
 
 ## Flag
+
 ```
 kooda2puivaav1idi4f57q8iq
 ```

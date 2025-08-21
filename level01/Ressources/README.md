@@ -1,9 +1,11 @@
 # SnowCrash Level01 Walkthrough
 
 ## Overview
+
 In this level, we need to find and decrypt an encrypted password hash to gain access to the `flag01` user account.
 
 ## Prerequisites
+
 - Access to `level00` user account
 - Basic knowledge of password cracking tools (John the Ripper)
 - Understanding of DES encryption
@@ -13,7 +15,7 @@ In this level, we need to find and decrypt an encrypted password hash to gain ac
 From the previous level, we discovered that there are accessible files containing user information. Let's search for password-related files:
 
 ```bash
-level00@SnowCrash:~$ find / | grep passwd 2>/dev/null
+level00@SnowCrash:~$ find / 2>/dev/null | grep passwd
 ```
 
 This command searches the entire filesystem for files containing "passwd" in their name, redirecting error messages to `/dev/null` to keep the output clean.
@@ -23,7 +25,7 @@ This command searches the entire filesystem for files containing "passwd" in the
 Among the results, we find an interesting file at `/rofs/usr/bin/passwd`:
 
 ```bash
-level00@SnowCrash:~$ cat /rofs/usr/bin/passwd
+level01@SnowCrash:~$ cat /etc/passwd
 ```
 
 Within this file, we discover an entry for the `flag01` user:
@@ -33,6 +35,7 @@ flag01:42hDRfypTqqnw:3001:3001::/home/flag/flag01:/bin/bash
 ```
 
 **Analysis:**
+
 - Username: `flag01`
 - Encrypted password: `42hDRfypTqqnw`
 - UID: 3001
@@ -43,6 +46,7 @@ flag01:42hDRfypTqqnw:3001:3001::/home/flag/flag01:/bin/bash
 ## Step 3: Identify the Encryption Method
 
 The password hash `42hDRfypTqqnw` appears to be in DES-crypt format, which is a traditional Unix password encryption method. This can be identified by:
+
 - Length (13 characters)
 - Character set (letters, numbers, and some symbols)
 - No prefix (unlike MD5 `$1$` or SHA `$6$`)
@@ -105,12 +109,14 @@ Check flag.Here is your token : f2av5il02puano7naaf6adaaf
 **Token:** `f2av5il02puano7naaf6adaaf`
 
 **Key Takeaways:**
+
 1. Always check for alternative password files in different system locations
 2. DES-crypt hashes are relatively weak and can be cracked quickly
 3. John the Ripper is an effective tool for cracking various password hash formats
 4. The `--format` flag in John the Ripper ensures the correct algorithm is used
 
 ## Tools Used
+
 - `find` - File system search
 - `cat` - File content display
 - `john` - Password cracking tool
@@ -118,4 +124,5 @@ Check flag.Here is your token : f2av5il02puano7naaf6adaaf
 - `getflag` - Retrieve level token
 
 ## Next Steps
+
 Use the obtained token `f2av5il02puano7naaf6adaaf` to access Level02 of the SnowCrash challenge.
