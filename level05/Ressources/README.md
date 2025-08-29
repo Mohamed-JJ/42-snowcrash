@@ -1,6 +1,7 @@
 # SnowCrash Level05 Walkthrough
 
 ## Overview
+
 Level05 demonstrates exploitation through **cron job manipulation** and **directory write permissions**. This level shows how scheduled tasks running with elevated privileges can be exploited when they process user-writable directories.
 
 ## Initial Investigation
@@ -30,6 +31,7 @@ level05@SnowCrash:~$ find / -user flag05 2>/dev/null
 ```
 
 ### Key Discoveries
+
 - Two files are owned by `flag05`
 - Both are located in system directories (`/usr/sbin/` and `/rofs/usr/sbin/`)
 - The names suggest they're related to OpenArena server management
@@ -66,6 +68,7 @@ The `/usr/sbin/openarenaserver` script does the following:
 ### Vulnerability Analysis
 
 This script presents several attack vectors:
+
 - **Arbitrary Code Execution**: Any file in `/opt/openarenaserver/` gets executed
 - **Privilege Escalation**: The script runs with `flag05` privileges
 - **Self-Cleaning**: Files are deleted after execution (stealth aspect)
@@ -83,8 +86,9 @@ drwxrwxr-x+ 2 root root   60 Jul 18 18:08 openarenaserver
 ```
 
 The directory has `drwxrwxr-x+` permissions, meaning:
+
 - **Owner (root)**: Read, write, execute
-- **Group**: Read, write, execute  
+- **Group**: Read, write, execute
 - **Others**: Read, execute
 - **+**: Extended ACL permissions (likely allowing our user to write)
 
@@ -104,7 +108,7 @@ We get permission denied, indicating the script isn't meant to be run directly b
 Let's investigate how this script gets executed by checking system locations:
 
 ```bash
-level05@SnowCrash:~$ find / -name level05 2> /dev/null 
+level05@SnowCrash:~$ find / -name level05 2> /dev/null
 /var/mail/level05
 /rofs/var/mail/level05
 ```
@@ -119,6 +123,7 @@ level05@SnowCrash:~$ cat /var/mail/level05
 ### Cron Job Analysis
 
 This is a **cron job configuration** that:
+
 - **Schedule**: `*/2 * * * *` - Runs every 2 minutes
 - **Command**: `su -c "sh /usr/sbin/openarenaserver" - flag05`
 - **Privilege**: Executes as the `flag05` user
@@ -127,6 +132,7 @@ This is a **cron job configuration** that:
 ## Exploitation Strategy
 
 The attack plan:
+
 1. **Create a malicious script** that executes `getflag`
 2. **Place it in `/opt/openarenaserver/`** where the cron job will find it
 3. **Redirect output** to a file we can access
@@ -135,10 +141,11 @@ The attack plan:
 ### Step 1: Create the Malicious Script
 
 ```bash
-level05@SnowCrash:~$ echo '/bin/getflag > /tmp/flag05' > /opt/openarenaserver/getflag05
+level05@SnowCrash:~$ echo 'getflag > /tmp/flag05' > /opt/openarenaserver/getflag05
 ```
 
 This script:
+
 - Executes `/bin/getflag`
 - Redirects output to `/tmp/flag05`
 - Will run with `flag05` privileges when the cron job executes
@@ -178,15 +185,18 @@ Check flag.Here is your token : viuaaale9huek52boumoomioc
 This level demonstrates several critical security vulnerabilities:
 
 ### 1. **Insecure Cron Jobs**
+
 - Running scripts from user-writable directories
 - Automatic execution without proper validation
 - Elevated privileges for scheduled tasks
 
 ### 2. **Directory Permissions**
+
 - World-writable directories in system locations
 - Insufficient access controls on sensitive directories
 
 ### 3. **Privilege Escalation**
+
 - Automated privilege escalation through cron
 - Lack of input validation for executed scripts
 
@@ -204,21 +214,24 @@ To prevent such vulnerabilities:
 ## Understanding Cron Syntax
 
 The cron expression `*/2 * * * *` breaks down as:
+
 - **`*/2`**: Every 2 minutes
 - **`*`**: Every hour
-- **`*`**: Every day of month  
+- **`*`**: Every day of month
 - **`*`**: Every month
 - **`*`**: Every day of week
 
 ## Real-World Relevance
 
 This attack pattern is common in:
+
 - **Web servers** with insecure file upload handling
 - **Backup systems** that process user-controlled directories
 - **Log rotation** scripts with insufficient permission checks
 - **Automated deployment** systems with weak validation
 
 ## Flag
+
 ```
 viuaaale9huek52boumoomioc
 ```

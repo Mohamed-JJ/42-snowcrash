@@ -19,10 +19,15 @@ We discover a `.pcap` file, which is a Packet Capture file that stores network t
 
 To analyze the packet capture file, we need to transfer it to our analysis machine (Kali Linux) where we have Wireshark installed.
 
-### Step 1: Transfer from SnowCrash to local machine
+<!-- ### Step 1: Transfer from SnowCrash to local machine -->
+<!-- ```bash
+scp -P 4242 level02@192.168.56.101:/home/user/level02/level02.pcap .
+``` -->
+
+### Step 1: Transfer from SnowCrash to Kali Linux
 
 ```bash
-scp -P 4242 level02@192.168.56.101:/home/user/level02/level02.pcap .
+scp ./level02.pcap kali@10.13.100.25:/home/kali/
 ```
 
 ### Step 2: Set appropriate permissions
@@ -31,11 +36,11 @@ scp -P 4242 level02@192.168.56.101:/home/user/level02/level02.pcap .
 chmod 777 level02.pcap
 ```
 
-### Step 3: Transfer to Kali Linux
+<!-- ### Step 3: Transfer to Kali Linux
 
 ```bash
 scp ./level02.pcap kali@10.13.100.25:/home/kali/
-```
+``` -->
 
 ## Wireshark Analysis
 

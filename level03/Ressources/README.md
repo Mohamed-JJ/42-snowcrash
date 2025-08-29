@@ -1,6 +1,7 @@
 # SnowCrash Level03 Walkthrough
 
 ## Overview
+
 Level03 focuses on binary exploitation through PATH manipulation and symbolic links. This level demonstrates how insecure system calls can be exploited to gain elevated privileges.
 
 ## Initial Investigation
@@ -19,6 +20,7 @@ d--x--x--x  1 root    users     340 Aug 30  2015 ..
 ```
 
 ### Key Observations
+
 - The `level03` binary has **setuid** and **setgid** bits set (`-rwsr-sr-x`)
 - It's owned by `flag03` user, meaning it runs with flag03 privileges
 - When executed, it simply outputs "Exploit me"
@@ -49,7 +51,9 @@ system("/usr/bin/env echo Exploit me"Exploit me
 ```
 
 ### Critical Discovery
+
 The binary makes a **vulnerable system call**:
+
 ```c
 system("/usr/bin/env echo Exploit me");
 ```
@@ -78,6 +82,7 @@ This suggests that `getflag` checks the effective user ID and only provides the 
 ## Exploitation Strategy
 
 The attack plan involves:
+
 1. Creating a malicious `echo` command that executes `getflag`
 2. Manipulating the PATH to make the system find our malicious `echo` first
 3. Running the vulnerable binary to trigger the exploit
@@ -157,6 +162,7 @@ Instead of a symbolic link, you could also create a script:
 Save this as `/tmp/echo`, make it executable with `chmod +x /tmp/echo`, and follow the same PATH manipulation steps.
 
 ## Flag
+
 ```
 qi0maab88jeaj46qoumi7maus
 ```

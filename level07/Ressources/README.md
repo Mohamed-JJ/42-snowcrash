@@ -26,7 +26,7 @@ int32_t main(int argc, char** argv, char** envp)
     uid_t eax_1 = geteuid();
     setresgid(eax, eax, eax);
     setresuid(eax_1, eax_1, eax_1);
-    
+
     char* var_1c = nullptr;
     asprintf(&var_1c, "/bin/echo %s ", getenv("LOGNAME"));
     return system(var_1c);
@@ -36,11 +36,13 @@ int32_t main(int argc, char** argv, char** envp)
 ## Vulnerability Analysis
 
 The vulnerability lies in this line:
+
 ```c
 asprintf(&var_1c, "/bin/echo %s ", getenv("LOGNAME"));
 ```
 
 The program:
+
 1. Retrieves the `LOGNAME` environment variable
 2. Concatenates it directly into a command string without sanitization
 3. Passes the resulting string to `system()` for execution
@@ -58,11 +60,13 @@ level07@SnowCrash:~$ export LOGNAME='$(getflag)'
 ```
 
 This will cause the command to become:
+
 ```bash
-/bin/echo $(getflag) 
+/bin/echo $(getflag)
 ```
 
 When executed, the shell will:
+
 1. First execute `getflag` (which should return the flag for this level)
 2. Pass the output as an argument to `echo`
 3. Display the flag
@@ -88,6 +92,7 @@ The command injection was successful, and we obtained the flag: `fiumuikeil55xe9
 ## Mitigation
 
 To prevent this vulnerability, the code should:
+
 - Validate the `LOGNAME` variable content
 - Use parameterized commands instead of string concatenation
 - Escape or sanitize special shell characters
